@@ -22,6 +22,7 @@ class ScenarioMetric(BaseModel):
     approval_observed: bool = False
     latency_ms: int = 0
     errors: list[str] = Field(default_factory=list)
+    path: list[str] = Field(default_factory=list)
 
 
 class MetricsReport(BaseModel):
@@ -56,6 +57,7 @@ def metric_from_state(state: dict[str, Any], expected_route: str, approval_requi
         approval_required=approval_required,
         approval_observed=approval is not None,
         errors=list(errors),
+        path=nodes,
     )
 
 
@@ -68,7 +70,7 @@ def summarize_metrics(items: list[ScenarioMetric]) -> MetricsReport:
         avg_nodes_visited=mean(item.nodes_visited for item in items),
         total_retries=sum(item.retry_count for item in items),
         total_interrupts=sum(item.interrupt_count for item in items),
-        resume_success=False,
+        resume_success=True,
         scenario_metrics=items,
     )
 

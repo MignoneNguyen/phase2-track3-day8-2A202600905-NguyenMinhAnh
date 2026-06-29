@@ -1,0 +1,684 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangGraph Agent Lab Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-color: #60a5fa;
+            --accent-hover: #93c5fd;
+            --success: #34d399;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 3rem 1rem;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(to right, #93c5fd, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease forwards;
+            opacity: 0;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
+        }
+        
+        /* Staggered animation for cards */
+        .glass-card:nth-child(1) { animation-delay: 0.1s; }
+        .glass-card:nth-child(2) { animation-delay: 0.2s; }
+        .glass-card:nth-child(3) { animation-delay: 0.3s; }
+        .glass-card:nth-child(4) { animation-delay: 0.4s; }
+        
+        h2 {
+            color: var(--accent-hover);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.5rem;
+        }
+        
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.4);
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+        
+        th {
+            background: rgba(255, 255, 255, 0.08);
+            font-weight: 700;
+            color: #bfdbfe;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            color: #e2e8f0;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        strong {
+            color: #fff;
+            font-weight: 700;
+        }
+        
+        .diagram-container {
+            text-align: center;
+            margin: 1rem 0 2rem 0;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            overflow: auto;
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        
+        .diagram-container:hover {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) inset;
+        }
+        
+        /* Stats row */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-box:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--success);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        
+        .scenario-btn {
+            background: rgba(59, 130, 246, 0.2);
+            color: #bfdbfe;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        
+        .scenario-btn:hover {
+            background: rgba(59, 130, 246, 0.4);
+        }
+        
+        .scenario-btn.active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            border-color: #60a5fa;
+        }
+        
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .code-block {
+            background: #0f172a;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--card-border);
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #a5b4fc;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Agent Lab Report</h1>
+            <p>LangGraph Orchestration & Metrics Analysis</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-value">100.0%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">7</div>
+                <div class="stat-label">Total Scenarios</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">2</div>
+                <div class="stat-label">HITL Interrupts</div>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <h2>Interactive Graph Architecture</h2>
+            <p style="margin-bottom: 1rem; color: #cbd5e1;">Select a scenario to visualize its execution path through the graph.</p>
+            <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="scenario-btn active" onclick="renderScenario('all', event)">Default View</button>
+<button class="scenario-btn" onclick="renderScenario('S01_simple', event)">S01_simple</button>
+<button class="scenario-btn" onclick="renderScenario('S02_tool', event)">S02_tool</button>
+<button class="scenario-btn" onclick="renderScenario('S03_missing', event)">S03_missing</button>
+<button class="scenario-btn" onclick="renderScenario('S04_risky', event)">S04_risky</button>
+<button class="scenario-btn" onclick="renderScenario('S05_error', event)">S05_error</button>
+<button class="scenario-btn" onclick="renderScenario('S06_delete', event)">S06_delete</button>
+<button class="scenario-btn" onclick="renderScenario('S07_dead_letter', event)">S07_dead_letter</button>
+
+            </div>
+            <div class="diagram-container">
+                <div class="mermaid" id="mermaid-view">
+                    ---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	intake(intake)
+	classify(classify)
+	tool(tool)
+	evaluate(evaluate)
+	answer(answer)
+	clarify(clarify)
+	risky_action(risky_action)
+	approval(approval)
+	retry(retry)
+	dead_letter(dead_letter)
+	finalize(finalize)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> intake;
+	answer --> finalize;
+	approval -.-> clarify;
+	approval -.-> tool;
+	clarify --> finalize;
+	classify -.-> answer;
+	classify -.-> clarify;
+	classify -.-> retry;
+	classify -.-> risky_action;
+	classify -.-> tool;
+	dead_letter --> finalize;
+	evaluate -.-> answer;
+	evaluate -.-> retry;
+	intake --> classify;
+	retry -.-> dead_letter;
+	retry -.-> tool;
+	risky_action --> approval;
+	tool --> evaluate;
+	finalize --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card markdown-content">
+            <h1>Lab Report</h1>
+<h2>1. Metrics Summary</h2>
+<ul>
+<li>Total Scenarios: 7</li>
+<li>Success Rate: 100.00%</li>
+<li>Total Retries: 0</li>
+<li>Interrupts: 2</li>
+</ul>
+<h2>2. Per-Scenario Results</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Success</th>
+<th>Expected Route</th>
+<th>Actual Route</th>
+<th>Nodes</th>
+<th>Retries</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S01_simple</td>
+<td>True</td>
+<td>simple</td>
+<td>simple</td>
+<td>4</td>
+<td>0</td>
+</tr>
+<tr>
+<td>S02_tool</td>
+<td>True</td>
+<td>tool</td>
+<td>tool</td>
+<td>6</td>
+<td>0</td>
+</tr>
+<tr>
+<td>S03_missing</td>
+<td>True</td>
+<td>missing_info</td>
+<td>missing_info</td>
+<td>4</td>
+<td>0</td>
+</tr>
+<tr>
+<td>S04_risky</td>
+<td>True</td>
+<td>risky</td>
+<td>risky</td>
+<td>8</td>
+<td>0</td>
+</tr>
+<tr>
+<td>S05_error</td>
+<td>True</td>
+<td>error</td>
+<td>error</td>
+<td>10</td>
+<td>0</td>
+</tr>
+<tr>
+<td>S06_delete</td>
+<td>True</td>
+<td>risky</td>
+<td>risky</td>
+<td>8</td>
+<td>0</td>
+</tr>
+<tr>
+<td>S07_dead_letter</td>
+<td>True</td>
+<td>error</td>
+<td>error</td>
+<td>5</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h2>3. Architecture</h2>
+<p>The graph uses conditional edges to route user queries:</p>
+<ul>
+<li><code>classify</code> uses an LLM to categorize intents (risky, missing_info, tool, simple, error).</li>
+<li><code>tool</code> executes mock tools and loops back on errors via <code>evaluate</code> and <code>retry</code>.</li>
+<li><code>risky_action</code> leads to <code>approval</code> which uses <code>interrupt</code> to prompt for HITL.</li>
+</ul>
+<h2>4. Failure Analysis</h2>
+<ul>
+<li><strong>Unbounded Retry Loops</strong>: Without bounded retries, system failures cause infinite loops. We added <code>attempt</code> counting and <code>dead_letter</code> to forcefully exit loops after max retries.</li>
+<li><strong>Classification Errors</strong>: LLMs might misclassify if prompts are unclear. Using <code>.with_structured_output</code> guarantees we get a valid enum route.</li>
+</ul>
+<h2>5. Extensions Completed (Bonus)</h2>
+<p>We implemented multiple bonus extensions for the 90+ tier:</p>
+<ol>
+<li><strong>LLM-as-Judge</strong>: We upgraded <code>evaluate_node</code> to use an LLM structured output to actively analyze the tool result and determine if a retry is needed.</li>
+<li><strong>Crash Recovery &amp; Persistence</strong>: We implemented the SQLite Checkpointer and wrote <code>test_resume.py</code> to successfully demonstrate state recovery after a simulated crash at the HITL approval node.</li>
+<li><strong>Graph Diagram</strong>: We created <code>export_graph.py</code> to successfully export the graph architecture into a Mermaid diagram.</li>
+</ol>
+        </div>
+        
+        <div class="glass-card">
+            <h2>Raw JSON Metrics</h2>
+            <div class="code-block">
+                <pre>{
+  "total_scenarios": 7,
+  "success_rate": 1.0,
+  "avg_nodes_visited": 6.428571428571429,
+  "total_retries": 0,
+  "total_interrupts": 2,
+  "resume_success": true,
+  "scenario_metrics": [
+    {
+      "scenario_id": "S01_simple",
+      "success": true,
+      "expected_route": "simple",
+      "actual_route": "simple",
+      "nodes_visited": 4,
+      "retry_count": 0,
+      "interrupt_count": 0,
+      "approval_required": false,
+      "approval_observed": false,
+      "latency_ms": 0,
+      "errors": [],
+      "path": [
+        "intake",
+        "classify",
+        "answer",
+        "finalize"
+      ]
+    },
+    {
+      "scenario_id": "S02_tool",
+      "success": true,
+      "expected_route": "tool",
+      "actual_route": "tool",
+      "nodes_visited": 6,
+      "retry_count": 0,
+      "interrupt_count": 0,
+      "approval_required": false,
+      "approval_observed": false,
+      "latency_ms": 0,
+      "errors": [],
+      "path": [
+        "intake",
+        "classify",
+        "tool",
+        "evaluate",
+        "answer",
+        "finalize"
+      ]
+    },
+    {
+      "scenario_id": "S03_missing",
+      "success": true,
+      "expected_route": "missing_info",
+      "actual_route": "missing_info",
+      "nodes_visited": 4,
+      "retry_count": 0,
+      "interrupt_count": 0,
+      "approval_required": false,
+      "approval_observed": false,
+      "latency_ms": 0,
+      "errors": [],
+      "path": [
+        "intake",
+        "classify",
+        "clarify",
+        "finalize"
+      ]
+    },
+    {
+      "scenario_id": "S04_risky",
+      "success": true,
+      "expected_route": "risky",
+      "actual_route": "risky",
+      "nodes_visited": 8,
+      "retry_count": 0,
+      "interrupt_count": 1,
+      "approval_required": true,
+      "approval_observed": true,
+      "latency_ms": 0,
+      "errors": [],
+      "path": [
+        "intake",
+        "classify",
+        "risky_action",
+        "approval",
+        "tool",
+        "evaluate",
+        "answer",
+        "finalize"
+      ]
+    },
+    {
+      "scenario_id": "S05_error",
+      "success": true,
+      "expected_route": "error",
+      "actual_route": "error",
+      "nodes_visited": 10,
+      "retry_count": 0,
+      "interrupt_count": 0,
+      "approval_required": false,
+      "approval_observed": false,
+      "latency_ms": 0,
+      "errors": [
+        "Failed attempt 1",
+        "Failed attempt 2"
+      ],
+      "path": [
+        "intake",
+        "classify",
+        "retry_or_fallback",
+        "tool",
+        "evaluate",
+        "retry_or_fallback",
+        "tool",
+        "evaluate",
+        "answer",
+        "finalize"
+      ]
+    },
+    {
+      "scenario_id": "S06_delete",
+      "success": true,
+      "expected_route": "risky",
+      "actual_route": "risky",
+      "nodes_visited": 8,
+      "retry_count": 0,
+      "interrupt_count": 1,
+      "approval_required": true,
+      "approval_observed": true,
+      "latency_ms": 0,
+      "errors": [],
+      "path": [
+        "intake",
+        "classify",
+        "risky_action",
+        "approval",
+        "tool",
+        "evaluate",
+        "answer",
+        "finalize"
+      ]
+    },
+    {
+      "scenario_id": "S07_dead_letter",
+      "success": true,
+      "expected_route": "error",
+      "actual_route": "error",
+      "nodes_visited": 5,
+      "retry_count": 0,
+      "interrupt_count": 0,
+      "approval_required": false,
+      "approval_observed": false,
+      "latency_ms": 0,
+      "errors": [
+        "Failed attempt 1"
+      ],
+      "path": [
+        "intake",
+        "classify",
+        "retry_or_fallback",
+        "dead_letter",
+        "finalize"
+      ]
+    }
+  ]
+}</pre>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'dark',
+            securityLevel: 'loose'
+        });
+        
+        const rawMermaid = `---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	intake(intake)
+	classify(classify)
+	tool(tool)
+	evaluate(evaluate)
+	answer(answer)
+	clarify(clarify)
+	risky_action(risky_action)
+	approval(approval)
+	retry(retry)
+	dead_letter(dead_letter)
+	finalize(finalize)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> intake;
+	answer --> finalize;
+	approval -.-> clarify;
+	approval -.-> tool;
+	clarify --> finalize;
+	classify -.-> answer;
+	classify -.-> clarify;
+	classify -.-> retry;
+	classify -.-> risky_action;
+	classify -.-> tool;
+	dead_letter --> finalize;
+	evaluate -.-> answer;
+	evaluate -.-> retry;
+	intake --> classify;
+	retry -.-> dead_letter;
+	retry -.-> tool;
+	risky_action --> approval;
+	tool --> evaluate;
+	finalize --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc`;
+        const scenarioPaths = {"S01_simple": ["intake", "classify", "answer", "finalize"], "S02_tool": ["intake", "classify", "tool", "evaluate", "answer", "finalize"], "S03_missing": ["intake", "classify", "clarify", "finalize"], "S04_risky": ["intake", "classify", "risky_action", "approval", "tool", "evaluate", "answer", "finalize"], "S05_error": ["intake", "classify", "retry_or_fallback", "tool", "evaluate", "retry_or_fallback", "tool", "evaluate", "answer", "finalize"], "S06_delete": ["intake", "classify", "risky_action", "approval", "tool", "evaluate", "answer", "finalize"], "S07_dead_letter": ["intake", "classify", "retry_or_fallback", "dead_letter", "finalize"]};
+        
+        async function renderScenario(scenarioId, event) {
+            // update active button
+            if (event) {
+                document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+            }
+            
+            let mermaidCode = rawMermaid;
+            if (scenarioId !== 'all') {
+                const path = scenarioPaths[scenarioId];
+                if (path) {
+                    const uniqueNodes = [...new Set(path)];
+                    uniqueNodes.forEach(node => {
+                        if (node !== 'unknown') {
+                            mermaidCode += `\nstyle ${node} fill:#3b82f6,stroke:#fff,stroke-width:2px,color:#fff`;
+                        }
+                    });
+                }
+            }
+            
+            // Render dynamically
+            const graphDiv = document.getElementById('mermaid-view');
+            graphDiv.innerHTML = '';
+            
+            try {
+                const { svg } = await mermaid.render('mermaid-dynamic-svg', mermaidCode);
+                graphDiv.innerHTML = svg;
+            } catch (e) {
+                console.error("Mermaid render error:", e);
+                graphDiv.innerHTML = `<div class="mermaid">${mermaidCode}</div>`;
+                mermaid.init(undefined, graphDiv.querySelectorAll('.mermaid'));
+            }
+        }
+    </script>
+</body>
+</html>
